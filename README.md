@@ -1,2 +1,2 @@
 # project
-yfinance, streamlit
+yahoo finance, streamlit
