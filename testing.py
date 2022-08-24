@@ -15,4 +15,3 @@ if selected == "About":
 
 if selected == "Stock Data":
     st.title(f"{selected} page")
-

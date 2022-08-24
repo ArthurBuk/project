@@ -3,16 +3,20 @@ import pandas as pd
 from yahoo_fin import stock_info as si
 import datetime as dt
 
+
+############################################################################################################## FILTER 1
 # or another ETF (DOW, NASDAQ)
-tickers = si.tickers_sp500()
+ETF = si.tickers_sp500()
+
+############################################################################################################## FILTER 2
 
 # T=1Y (365 days)
 start = dt.datetime.now() - dt.timedelta(days=365)
 end = dt.datetime.now()
 
 # return of ETF in 1Y
-sp500_df = web.DataReader('^GSPC', 'yahoo', start, end)
-sp500_df['Pct change'] = sp500_df['Ads Close'].pct_change()
+sp500_df = web.DataReader('^GSPC', 'yahoo', start, end)   # make argument dynamic
+sp500_df['Pct Change'] = sp500_df['Adj Close'].pct_change()
 sp500_return = (sp500_df['Pct Change'] + 1).cumprod()[-1]
 
 # parameters for FILTERING
@@ -31,12 +35,12 @@ final_df = pd.DataFrame(columns=[
 
 # create CSV file OR ignore and keep just in memory,
 # adjust code on a line 62
-for ticker in tickers:
+for ticker in ETF:
     df = web.DataReader(ticker, 'yahoo', start, end)
-    df.to_csv(f'stock_data/{ticker}.csv')
+    df.to_csv(f'best_performers/{ticker}.csv')
 
     # calculating % change in stock price
-    df['Pct Change'] = df['Adj Close'].ptc_change()
+    df['Pct Change'] = df['Adj Close'].pct_change()
     stock_return = (df['Pct Change'] + 1).cumprod()[-1]
 
     # calculating relative returns of 1 stock to ETF
@@ -44,7 +48,7 @@ for ticker in tickers:
     return_list.append(returns_compared)
 
 # FILTERS for identifying TOP performers (> than ETF)
-best_performers = pd.DataFrame(list(zip(tickers, return_list)),
+best_performers = pd.DataFrame(list(zip(ETF, return_list)),
                                columns=[
                                    'Ticker',
                                    'Returns Compared'
@@ -59,7 +63,7 @@ best_performers = best_performers[best_performers['Score'] >= best_performers['S
 for ticker in best_performers['Ticker']:
     try:
         # uploading the CSV file
-        df = pd.read_csv(f'stock_data/{ticker}.csv', index_col=0)
+        df = pd.read_csv(f'best_performers/{ticker}.csv', index_col=0)
         moving_averages = [150, 200]
         for ma in moving_averages:
             # window defines timeframe (e.g. 150 dats, 200 days, etc.)
@@ -100,6 +104,7 @@ for ticker in best_performers['Ticker']:
 
 final_df.sort_values(by='Score', ascending=False)
 pd.set_option('display.max_columns', 10)
+
 print(final_df)
 final_df.to_csv()
 
