@@ -6,7 +6,7 @@ import datetime as dt
 
 ############################################################################################################## FILTER 1
 # or another ETF (DOW, NASDAQ)
-ETF = si.tickers_sp500()
+tickers = si.tickers_sp500()
 
 ############################################################################################################## FILTER 2
 
@@ -35,9 +35,9 @@ final_df = pd.DataFrame(columns=[
 
 # create CSV file OR ignore and keep just in memory,
 # adjust code on a line 62
-for ticker in ETF:
+for ticker in tickers:
     df = web.DataReader(ticker, 'yahoo', start, end)
-    df.to_csv(f'best_performers/{ticker}.csv')
+    df.to_csv(f'stock_data/{ticker}.csv')
 
     # calculating % change in stock price
     df['Pct Change'] = df['Adj Close'].pct_change()
@@ -48,7 +48,7 @@ for ticker in ETF:
     return_list.append(returns_compared)
 
 # FILTERS for identifying TOP performers (> than ETF)
-best_performers = pd.DataFrame(list(zip(ETF, return_list)),
+best_performers = pd.DataFrame(list(zip(tickers, return_list)),
                                columns=[
                                    'Ticker',
                                    'Returns Compared'
@@ -63,7 +63,7 @@ best_performers = best_performers[best_performers['Score'] >= best_performers['S
 for ticker in best_performers['Ticker']:
     try:
         # uploading the CSV file
-        df = pd.read_csv(f'best_performers/{ticker}.csv', index_col=0)
+        df = pd.read_csv(f'stock_data/{ticker}.csv', index_col=0)
         moving_averages = [150, 200]
         for ma in moving_averages:
             # window defines timeframe (e.g. 150 dats, 200 days, etc.)
