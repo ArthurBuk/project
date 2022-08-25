@@ -2,10 +2,12 @@
 import requests
 import streamlit as st
 from streamlit_lottie import st_lottie
+import altair as alt
 # BACK-END
 import pandas_datareader as web
 import pandas as pd
 from yahoo_fin import stock_info as si
+import yfinance as yf
 import datetime as dt
 
 
@@ -21,34 +23,82 @@ lottie_icon_2 = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_zz
 st_lottie(lottie_icon_2)
 
 
-# FILTER 1 - DONE
+# FILTER 1 - ETF (DONE)
 st.header("Select an ETF for financial analysis")
 etf_list = ['S&P 500', 'DOW', 'NASDAQ']
-etf_selected = st.selectbox("Choose index", options=etf_list)
+etf_selectbox = st.selectbox("Choose index", options=etf_list)
 
-if etf_selected == 'S&P 500':
-    tickers = si.tickers_sp500()
-elif etf_selected == 'DOW':
-    tickers = si.tickers_dow()
-elif etf_selected == 'NASDAQ':
-    tickers = si.tickers_nasdaq()
-
-
-# FILTER 2 - DONE
+# FILTER 2 - TIMELINE (DONE)
 st.header("Select the timeframe")
 x = st.slider('In days from 1 to 365',
               min_value=1, max_value=365, step=1)
 
+
 start = dt.datetime.now() - dt.timedelta(days=x)
 end = dt.datetime.now()
 
+if etf_selectbox == 'S&P 500':
+    tickers = si.tickers_sp500()
+    etf_selected = '^GSPC'
+elif etf_selectbox == 'DOW':
+    tickers = si.tickers_dow()
+    etf_selected = '^DJI'
+elif etf_selectbox == 'NASDAQ':
+    tickers = si.tickers_nasdaq()
+    etf_selected = '^IXIC'
 
-# return of ETF in 1Y
-etf_df = web.DataReader('^GSPC', 'yahoo', start, end)   # ^GSPC make dynamic
+etf_selected_2 = '^IXIC'
+
+etf_df = web.DataReader(etf_selected, 'yahoo', start, end)
 etf_df['Pct Change'] = etf_df['Adj Close'].pct_change()
 etf_return = (etf_df['Pct Change'] + 1).cumprod()[-1]
 
-# parameters for FILTERING
+# PLOT 1 - ETF performance - from **yfinance**
+st.header(f"{etf_selectbox} index performance over the past {x} days")
+plot1_etf_symbol = etf_selected  # Ticker symbol of ETF, which was selected in a checkbox
+plot1_etf_data = yf.Ticker(plot1_etf_symbol)
+plot1_etf_df = plot1_etf_data.history(period='1d', start=start, end=end)
+
+st.line_chart(plot1_etf_df["Close"])
+
+st.write(etf_df)
+
+
+
+
+# Plot showing performance of ETF
+
+# etf_df_plot = etf_df[['Adj Close', 'Pct Change']]
+# st.write(etf_df_plot)
+#
+# etf_plot1_selected = etf_df.iloc[:, 5:6]
+# #etf_plot1_selected.index = pd.to_datetime(etf_plot1_selected.index)
+# etf_plot2_selected = etf_df.iloc[:, 6:7]
+#
+# st.write(etf_plot1_selected)
+# # st.pyplot(etf_plot1_selected)
+# st.write(etf_plot2_selected)
+# st.write(etf_df)
+
+# Interactive plot for ETF to showcase its performance
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# FILTER 3 - FILTERING STOCK PARAMETERS
+# Score - key indicator to compare to S&P500 performance
+
 return_list = []
 final_df = pd.DataFrame(columns=[
     'Ticker',
@@ -63,7 +113,7 @@ final_df = pd.DataFrame(columns=[
     ])
 
 # create CSV file OR ignore and keep just in memory,
-# adjust code on a line 62
+#################################################### adjust code on a line 62
 
 #for ticker in tickers:
 #    df = web.DataReader(ticker, 'yahoo', start, end)
